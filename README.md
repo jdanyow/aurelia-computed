@@ -1,10 +1,14 @@
 # ![aurelia-computed](aurelia-computed.png)
 
-This library is a plugin for the [Aurelia](http://www.aurelia.io/) platform that provides a method for observing computed properties without using dirty-checking.
+This library is a plugin for the [Aurelia](http://www.aurelia.io/) platform that provides an `ObjectObservationAdapter` that plugs into Aurelia's binding system.  For more info on Aurelia's pluggable binding system see [this post](http://www.danyow.net/aurelia-property-observation/).
 
 **How does it work?**
 
-todo: describe how it works
+This adapter works with properties with getter functions.  It uses Aurelia's javascript parser to parse the body of the function, which results in an [abstract syntax tree (AST)](http://en.wikipedia.org/wiki/Abstract_syntax_tree).  The AST is then checked for "observability" and an observer is returned.
+
+**What types of computed properties can this adapter observe?**
+
+todo: list scenarios
 
 ## Get Started
 
