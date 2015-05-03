@@ -15,6 +15,7 @@ System.register([], function (_export) {
           _classCallCheck(this, Analyzer);
 
           this.canObserve = true;
+          this.reason = '';
         }
 
         _createClass(Analyzer, [{
@@ -38,9 +39,7 @@ System.register([], function (_export) {
           }
         }, {
           key: 'visitValueConverter',
-          value: function visitValueConverter(converter) {
-            this.canObserve = false;
-          }
+          value: function visitValueConverter(converter) {}
         }, {
           key: 'visitAssign',
           value: function visitAssign(assign) {
@@ -57,8 +56,9 @@ System.register([], function (_export) {
         }, {
           key: 'visitAccessScope',
           value: function visitAccessScope(access) {
-            if (access.name != 'this') {
+            if (access.name !== 'this') {
               this.canObserve = false;
+              this.reason += '\'' + access.name + '\' can\'t be accessed from the binding scope.  ';
             }
           }
         }, {
@@ -132,7 +132,11 @@ System.register([], function (_export) {
           value: function analyze(expression) {
             var visitor = new Analyzer();
             expression.accept(visitor);
-            return visitor.canObserve;
+            return {
+              expression: expression,
+              canObserve: visitor.canObserve,
+              reason: visitor.reason
+            };
           }
         }]);
 

@@ -22,7 +22,7 @@ var _Analyzer = require('./analyzer');
 
 var _GetterObserver = require('./getter-observer');
 
-var logger = LogManager.getLogger('templating-binding'),
+var logger = LogManager.getLogger('aurelia-computed'),
     container,
     parsed = {};
 
@@ -43,33 +43,29 @@ var ComputedObservationAdapter = (function () {
     key: 'handlesProperty',
     value: function handlesProperty(object, propertyName, descriptor) {
       var src = descriptor.get.toString(),
+          info = parsed[src],
           body,
-          expression,
-          canObserve;
+          expression;
 
-      if (parsed.hasOwnProperty(src)) {
-        return parsed[src].canObserve;
+      if (!info) {
+        try {
+          body = getFunctionBody(src).trim().substr('return'.length).trim();
+          expression = this.parser.parse(body);
+        } catch (ex) {
+          info = {
+            canObserve: false,
+            reason: 'Unable to parse \'' + propertyName + '\' property\'s getter function.\n' + src
+          };
+        }
+
+        info = parsed[src] = info || _Analyzer.Analyzer.analyze(expression);
       }
 
-      try {
-        body = getFunctionBody(src).trim().substr('return'.length).trim();
-        expression = this.parser.parse(body);
-      } catch (ex) {
-        logger.debug('unable to parse \'' + propertyName + '\' property.\n' + src);
-        parsed[src] = {
-          expression: null,
-          canObserve: false
-        };
-        return false;
+      if (!info.canObserve) {
+        logger.debug('Unable to observe \'' + propertyName + '\'.  ' + info.reason);
       }
 
-      canObserve = _Analyzer.Analyzer.analyze(expression);
-      parsed[src] = {
-        expression: expression,
-        canObserve: canObserve
-      };
-
-      return canObserve;
+      return info.canObserve;
     }
   }, {
     key: 'getObserver',

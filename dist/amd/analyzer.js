@@ -14,6 +14,7 @@ define(['exports'], function (exports) {
       _classCallCheck(this, Analyzer);
 
       this.canObserve = true;
+      this.reason = '';
     }
 
     _createClass(Analyzer, [{
@@ -37,9 +38,7 @@ define(['exports'], function (exports) {
       }
     }, {
       key: 'visitValueConverter',
-      value: function visitValueConverter(converter) {
-        this.canObserve = false;
-      }
+      value: function visitValueConverter(converter) {}
     }, {
       key: 'visitAssign',
       value: function visitAssign(assign) {
@@ -56,8 +55,9 @@ define(['exports'], function (exports) {
     }, {
       key: 'visitAccessScope',
       value: function visitAccessScope(access) {
-        if (access.name != 'this') {
+        if (access.name !== 'this') {
           this.canObserve = false;
+          this.reason += '\'' + access.name + '\' can\'t be accessed from the binding scope.  ';
         }
       }
     }, {
@@ -131,7 +131,11 @@ define(['exports'], function (exports) {
       value: function analyze(expression) {
         var visitor = new Analyzer();
         expression.accept(visitor);
-        return visitor.canObserve;
+        return {
+          expression: expression,
+          canObserve: visitor.canObserve,
+          reason: visitor.reason
+        };
       }
     }]);
 

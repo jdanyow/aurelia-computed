@@ -7,7 +7,7 @@ import * as LogManager from 'aurelia-logging';
 import {Analyzer} from './analyzer';
 import {GetterObserver} from './getter-observer';
 
-var logger = LogManager.getLogger('templating-binding'),
+var logger = LogManager.getLogger('aurelia-computed'),
     container,
     parsed = {};
 
@@ -21,32 +21,30 @@ function getFunctionBody(src) {
 
 class ComputedObservationAdapter {
   handlesProperty(object, propertyName, descriptor) {
-    var src = descriptor.get.toString(), body, expression, canObserve;
+    var src = descriptor.get.toString(),
+        info = parsed[src],
+        body, expression;
 
-    if (parsed.hasOwnProperty(src)) {
-      return parsed[src].canObserve;
-    }
-
-    try {
-      body = getFunctionBody(src).trim().substr('return'.length).trim();
-      expression = this.parser.parse(body);
-    }
-    catch(ex) {
-      logger.debug(`unable to parse '${propertyName}' property.\n${src}`);
-      parsed[src] = {
-        expression: null,
-        canObserve: false
+    if (!info) {
+      try {
+        body = getFunctionBody(src).trim().substr('return'.length).trim();
+        expression = this.parser.parse(body);
       }
-      return false;
+      catch(ex) {
+        info = {
+          canObserve: false,
+          reason: `Unable to parse '${propertyName}' property's getter function.\n${src}`
+        };
+      }
+
+      info = parsed[src] = (info || Analyzer.analyze(expression));
     }
 
-    canObserve = Analyzer.analyze(expression);
-    parsed[src] = {
-      expression: expression,
-      canObserve: canObserve
-    };
+    if (!info.canObserve) {
+      logger.debug(`Unable to observe '${propertyName}'.  ${info.reason}`)
+    }
 
-    return canObserve;
+    return info.canObserve;
   }
 
   getObserver(object, propertyName, descriptor) {

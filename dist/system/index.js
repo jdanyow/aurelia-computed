@@ -35,7 +35,7 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
     execute: function () {
       'use strict';
 
-      logger = LogManager.getLogger('templating-binding');
+      logger = LogManager.getLogger('aurelia-computed');
       parsed = {};
 
       ComputedObservationAdapter = (function () {
@@ -47,33 +47,29 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
           key: 'handlesProperty',
           value: function handlesProperty(object, propertyName, descriptor) {
             var src = descriptor.get.toString(),
+                info = parsed[src],
                 body,
-                expression,
-                canObserve;
+                expression;
 
-            if (parsed.hasOwnProperty(src)) {
-              return parsed[src].canObserve;
+            if (!info) {
+              try {
+                body = getFunctionBody(src).trim().substr('return'.length).trim();
+                expression = this.parser.parse(body);
+              } catch (ex) {
+                info = {
+                  canObserve: false,
+                  reason: 'Unable to parse \'' + propertyName + '\' property\'s getter function.\n' + src
+                };
+              }
+
+              info = parsed[src] = info || Analyzer.analyze(expression);
             }
 
-            try {
-              body = getFunctionBody(src).trim().substr('return'.length).trim();
-              expression = this.parser.parse(body);
-            } catch (ex) {
-              logger.debug('unable to parse \'' + propertyName + '\' property.\n' + src);
-              parsed[src] = {
-                expression: null,
-                canObserve: false
-              };
-              return false;
+            if (!info.canObserve) {
+              logger.debug('Unable to observe \'' + propertyName + '\'.  ' + info.reason);
             }
 
-            canObserve = Analyzer.analyze(expression);
-            parsed[src] = {
-              expression: expression,
-              canObserve: canObserve
-            };
-
-            return canObserve;
+            return info.canObserve;
           }
         }, {
           key: 'getObserver',

@@ -1,12 +1,17 @@
 export class Analyzer {
   constructor() {
     this.canObserve = true;
+    this.reason = '';
   }
 
   static analyze(expression) {
     var visitor = new Analyzer();
     expression.accept(visitor);
-    return visitor.canObserve;
+    return {
+      expression: expression,
+      canObserve: visitor.canObserve,
+      reason: visitor.reason
+    };
   }
 
   visitArgs(args) {
@@ -28,7 +33,6 @@ export class Analyzer {
 
   visitValueConverter(converter) {
     // this should never happen.
-    this.canObserve = false;
   }
 
   visitAssign(assign) {
@@ -43,8 +47,9 @@ export class Analyzer {
   }
 
   visitAccessScope(access) {
-    if (access.name != 'this') {
+    if (access.name !== 'this') {
       this.canObserve = false;
+      this.reason += `'${access.name}' can't be accessed from the binding scope.  `;
     }
   }
 
