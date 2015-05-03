@@ -1,14 +1,42 @@
 # ![aurelia-computed](aurelia-computed.png)
 
-This library is a plugin for the [Aurelia](http://www.aurelia.io/) platform that provides an `ObjectObservationAdapter` that plugs into Aurelia's binding system.  For more info on Aurelia's pluggable binding system see [this post](http://www.danyow.net/aurelia-property-observation/).
-
-**How does it work?**
-
-This adapter works with properties with getter functions.  It uses Aurelia's javascript parser to parse the body of the function, which results in an [abstract syntax tree (AST)](http://en.wikipedia.org/wiki/Abstract_syntax_tree).  The AST is then checked for "observability" and an observer is returned.
+aurelia-computed is a plugin for the [Aurelia](http://www.aurelia.io/) platform that improves the efficiency of data-binding computed properties.  Binding to computed properties (properties with getter functions) typically requires dirty-checking.  This plugin uses Aurelia's javascript parser to parse the body of the function, which results in an [abstract syntax tree (AST)](http://en.wikipedia.org/wiki/Abstract_syntax_tree).  The AST is then checked for "observability" and if successful, a specialized observer is returned to Aurelia's [pluggable binding system](http://www.danyow.net/aurelia-property-observation/).  The observer publishes change events when properties accessed by the getter function change.
 
 **What types of computed properties can this adapter observe?**
 
-todo: list scenarios
+One-liners that don't access anything outside the scope of the view-model are good candidates for observation by this plugin.  Here's a few examples:
+
+```javascript
+// "firstName" and "lastName" will be observed.
+get fullName() {
+  return `${this.firstName} `${this.lastName}`;
+}
+```
+```javascript
+// "isLoggedIn", "user" and "user.name" will be observed.
+get userName() {
+  return this.isLoggedIn ? this.user.name : '(Anonymous)';
+}
+```
+```javascript
+// "count" will be observed.
+get shoppingCartDescription() {
+  return this.count + ' ' + this.pluralize('item', this.count);
+}
+```
+```javascript
+var _bar = 'baz';
+
+export class Foo {
+
+  // This property cannot be observed by aurelia-computed.  Dirty-checking will be required.
+  // "_bar" can't be accessed from the binding scope.
+  get bar() {
+    return _bar;
+  }
+}
+```
+
 
 ## Get Started
 
@@ -23,7 +51,8 @@ todo: list scenarios
   export function configure(aurelia) {
     aurelia.use
       .standardConfiguration()
-      .plugin('aurelia-computed');  // <--------<<
+      .developmentLogging()         // enable debug logging to see aurelia-computed's observability messages.
+      .plugin('aurelia-computed');  // install the plugin
 
     aurelia.start().then(a => a.setRoot());
   }
