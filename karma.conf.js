@@ -10,7 +10,7 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jspm', 'jasmine-ajax', 'jasmine'],
+    frameworks: ['jspm', 'jasmine'],
 
     jspm: {
       // Edit this to your needs
@@ -38,6 +38,7 @@ module.exports = function(config) {
         sourceMap: 'inline',
         modules: 'system',
         moduleIds: false,
+        loose: "all",
         optional: [
           "es7.decorators"
         ]

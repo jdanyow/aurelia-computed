@@ -25,7 +25,7 @@ export class GetterObserver {
 
     if (callbacks.length === 0) {
       info = this.expression.connect(this.binding, { this: this.object });
-      this.oldValue = info.value;
+      this.oldValue = this.getValue();
       if (info.observer) {
         this.observer = info.observer;
         info.observer.subscribe(() => this.notify());

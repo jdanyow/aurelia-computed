@@ -43,7 +43,7 @@ export class Foo {
 1. Install aurelia-computed:
 
   ```bash
-  jspm install github:jdanyow/aurelia-computed
+  jspm install aurelia-computed
   ```
 2. Use the plugin in your app's main.js:
 

@@ -1,5 +1,11 @@
 System.config({
-  "transpiler": "traceur",
+  "transpiler": "babel",
+  "babelOptions": {
+    "optional": [
+      "runtime",
+      "es7.decorators"
+    ]
+  },
   "paths": {
     "*": "*.js",
     "github:*": "jspm_packages/github/*.js",
@@ -12,8 +18,9 @@ System.config({
   "map": {
     "aurelia-binding": "github:aurelia/binding@0.6.0",
     "aurelia-logging": "github:aurelia/logging@0.4.0",
-    "traceur": "github:jmcriffey/bower-traceur@0.0.88",
-    "traceur-runtime": "github:jmcriffey/bower-traceur-runtime@0.0.88",
+    "babel": "npm:babel-core@5.2.13",
+    "babel-runtime": "npm:babel-runtime@5.2.13",
+    "core-js": "npm:core-js@0.9.6",
     "github:aurelia/binding@0.6.0": {
       "aurelia-dependency-injection": "github:aurelia/dependency-injection@0.7.0",
       "aurelia-metadata": "github:aurelia/metadata@0.5.0",
