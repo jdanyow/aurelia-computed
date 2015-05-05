@@ -1,11 +1,11 @@
 System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-observer'], function (_export) {
-  var ObjectObservationAdapter, ObserverLocator, Parser, LogManager, Analyzer, GetterObserver, logger, container, parsed, ComputedObservationAdapter;
-
-  var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+  var ObjectObservationAdapter, ObserverLocator, Parser, LogManager, Analyzer, GetterObserver, logger, parsed, ComputedObservationAdapter;
 
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
   _export('configure', configure);
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
   function getFunctionBody(src) {
     function removeCommentsFromSource(str) {
@@ -16,8 +16,7 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
   }
 
   function configure(aurelia) {
-    container = aurelia.container;
-    aurelia.withInstance(ObjectObservationAdapter, new ComputedObservationAdapter());
+    aurelia.withInstance(ObjectObservationAdapter, new ComputedObservationAdapter(aurelia.container));
   }
 
   return {
@@ -39,55 +38,55 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
       parsed = {};
 
       ComputedObservationAdapter = (function () {
-        function ComputedObservationAdapter() {
+        function ComputedObservationAdapter(container) {
           _classCallCheck(this, ComputedObservationAdapter);
+
+          this.container = container;
         }
 
+        ComputedObservationAdapter.prototype.handlesProperty = function handlesProperty(object, propertyName, descriptor) {
+          var src = descriptor.get.toString(),
+              info = parsed[src],
+              body,
+              expression;
+
+          if (!info) {
+            try {
+              body = getFunctionBody(src).trim().substr('return'.length).trim();
+              expression = this.parser.parse(body);
+            } catch (ex) {
+              info = {
+                canObserve: false,
+                reason: 'Unable to parse \'' + propertyName + '\' property\'s getter function.\n' + src
+              };
+            }
+
+            info = parsed[src] = info || Analyzer.analyze(expression);
+          }
+
+          if (!info.canObserve) {
+            logger.debug('Unable to observe \'' + propertyName + '\'.  ' + info.reason);
+          }
+
+          return info.canObserve;
+        };
+
+        ComputedObservationAdapter.prototype.getObserver = function getObserver(object, propertyName, descriptor) {
+          var src = descriptor.get.toString(),
+              expression = parsed[src].expression;
+
+          return new GetterObserver(object, propertyName, descriptor, expression, this.bindingShim);
+        };
+
         _createClass(ComputedObservationAdapter, [{
-          key: 'handlesProperty',
-          value: function handlesProperty(object, propertyName, descriptor) {
-            var src = descriptor.get.toString(),
-                info = parsed[src],
-                body,
-                expression;
-
-            if (!info) {
-              try {
-                body = getFunctionBody(src).trim().substr('return'.length).trim();
-                expression = this.parser.parse(body);
-              } catch (ex) {
-                info = {
-                  canObserve: false,
-                  reason: 'Unable to parse \'' + propertyName + '\' property\'s getter function.\n' + src
-                };
-              }
-
-              info = parsed[src] = info || Analyzer.analyze(expression);
-            }
-
-            if (!info.canObserve) {
-              logger.debug('Unable to observe \'' + propertyName + '\'.  ' + info.reason);
-            }
-
-            return info.canObserve;
-          }
-        }, {
-          key: 'getObserver',
-          value: function getObserver(object, propertyName, descriptor) {
-            var src = descriptor.get.toString(),
-                expression = parsed[src].expression;
-
-            return new GetterObserver(object, propertyName, descriptor, expression, this.bindingShim);
-          }
-        }, {
           key: 'parser',
           get: function () {
-            return this._parser || (this._parser = container.get(Parser));
+            return this._parser || (this._parser = this.container.get(Parser));
           }
         }, {
           key: 'observerLocator',
           get: function () {
-            return this._observerLocator || (this._observerLocator = container.get(ObserverLocator));
+            return this._observerLocator || (this._observerLocator = this.container.get(ObserverLocator));
           }
         }, {
           key: 'bindingShim',
@@ -103,6 +102,8 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
 
         return ComputedObservationAdapter;
       })();
+
+      _export('ComputedObservationAdapter', ComputedObservationAdapter);
     }
   };
 });

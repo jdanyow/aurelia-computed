@@ -8,7 +8,6 @@ import {Analyzer} from './analyzer';
 import {GetterObserver} from './getter-observer';
 
 var logger = LogManager.getLogger('aurelia-computed'),
-    container,
     parsed = {};
 
 function getFunctionBody(src) {
@@ -19,7 +18,11 @@ function getFunctionBody(src) {
     return s.substring(s.indexOf('{') + 1, s.lastIndexOf('}'));
 }
 
-class ComputedObservationAdapter {
+export class ComputedObservationAdapter {
+  constructor(container) {
+    this.container = container;
+  }
+
   handlesProperty(object, propertyName, descriptor) {
     var src = descriptor.get.toString(),
         info = parsed[src],
@@ -56,12 +59,12 @@ class ComputedObservationAdapter {
 
   get parser() {
     // lazily retrieve Parser instance because it's not available at plugin installation time.
-    return this._parser || (this._parser = container.get(Parser));
+    return this._parser || (this._parser = this.container.get(Parser));
   }
 
   get observerLocator() {
     // lazily retrieve ObserverLocator instance because it's not available at plugin installation time.
-    return this._observerLocator || (this._observerLocator = container.get(ObserverLocator));
+    return this._observerLocator || (this._observerLocator = this.container.get(ObserverLocator));
   }
 
   get bindingShim() {
@@ -74,6 +77,5 @@ class ComputedObservationAdapter {
 }
 
 export function configure(aurelia) {
-  container = aurelia.container;
-  aurelia.withInstance(ObjectObservationAdapter, new ComputedObservationAdapter());
+  aurelia.withInstance(ObjectObservationAdapter, new ComputedObservationAdapter(aurelia.container));
 }

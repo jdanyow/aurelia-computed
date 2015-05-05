@@ -1,29 +1,26 @@
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-
-var _interopRequireWildcard = function (obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } };
-
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+exports.__esModule = true;
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 exports.configure = configure;
 
-var _ObjectObservationAdapter$ObserverLocator$Parser = require('aurelia-binding');
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-var _import = require('aurelia-logging');
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var LogManager = _interopRequireWildcard(_import);
+var _aureliaBinding = require('aurelia-binding');
 
-var _Analyzer = require('./analyzer');
+var _aureliaLogging = require('aurelia-logging');
 
-var _GetterObserver = require('./getter-observer');
+var LogManager = _interopRequireWildcard(_aureliaLogging);
+
+var _analyzer = require('./analyzer');
+
+var _getterObserver = require('./getter-observer');
 
 var logger = LogManager.getLogger('aurelia-computed'),
-    container,
     parsed = {};
 
 function getFunctionBody(src) {
@@ -35,55 +32,55 @@ function getFunctionBody(src) {
 }
 
 var ComputedObservationAdapter = (function () {
-  function ComputedObservationAdapter() {
+  function ComputedObservationAdapter(container) {
     _classCallCheck(this, ComputedObservationAdapter);
+
+    this.container = container;
   }
 
+  ComputedObservationAdapter.prototype.handlesProperty = function handlesProperty(object, propertyName, descriptor) {
+    var src = descriptor.get.toString(),
+        info = parsed[src],
+        body,
+        expression;
+
+    if (!info) {
+      try {
+        body = getFunctionBody(src).trim().substr('return'.length).trim();
+        expression = this.parser.parse(body);
+      } catch (ex) {
+        info = {
+          canObserve: false,
+          reason: 'Unable to parse \'' + propertyName + '\' property\'s getter function.\n' + src
+        };
+      }
+
+      info = parsed[src] = info || _analyzer.Analyzer.analyze(expression);
+    }
+
+    if (!info.canObserve) {
+      logger.debug('Unable to observe \'' + propertyName + '\'.  ' + info.reason);
+    }
+
+    return info.canObserve;
+  };
+
+  ComputedObservationAdapter.prototype.getObserver = function getObserver(object, propertyName, descriptor) {
+    var src = descriptor.get.toString(),
+        expression = parsed[src].expression;
+
+    return new _getterObserver.GetterObserver(object, propertyName, descriptor, expression, this.bindingShim);
+  };
+
   _createClass(ComputedObservationAdapter, [{
-    key: 'handlesProperty',
-    value: function handlesProperty(object, propertyName, descriptor) {
-      var src = descriptor.get.toString(),
-          info = parsed[src],
-          body,
-          expression;
-
-      if (!info) {
-        try {
-          body = getFunctionBody(src).trim().substr('return'.length).trim();
-          expression = this.parser.parse(body);
-        } catch (ex) {
-          info = {
-            canObserve: false,
-            reason: 'Unable to parse \'' + propertyName + '\' property\'s getter function.\n' + src
-          };
-        }
-
-        info = parsed[src] = info || _Analyzer.Analyzer.analyze(expression);
-      }
-
-      if (!info.canObserve) {
-        logger.debug('Unable to observe \'' + propertyName + '\'.  ' + info.reason);
-      }
-
-      return info.canObserve;
-    }
-  }, {
-    key: 'getObserver',
-    value: function getObserver(object, propertyName, descriptor) {
-      var src = descriptor.get.toString(),
-          expression = parsed[src].expression;
-
-      return new _GetterObserver.GetterObserver(object, propertyName, descriptor, expression, this.bindingShim);
-    }
-  }, {
     key: 'parser',
     get: function () {
-      return this._parser || (this._parser = container.get(_ObjectObservationAdapter$ObserverLocator$Parser.Parser));
+      return this._parser || (this._parser = this.container.get(_aureliaBinding.Parser));
     }
   }, {
     key: 'observerLocator',
     get: function () {
-      return this._observerLocator || (this._observerLocator = container.get(_ObjectObservationAdapter$ObserverLocator$Parser.ObserverLocator));
+      return this._observerLocator || (this._observerLocator = this.container.get(_aureliaBinding.ObserverLocator));
     }
   }, {
     key: 'bindingShim',
@@ -100,7 +97,8 @@ var ComputedObservationAdapter = (function () {
   return ComputedObservationAdapter;
 })();
 
+exports.ComputedObservationAdapter = ComputedObservationAdapter;
+
 function configure(aurelia) {
-  container = aurelia.container;
-  aurelia.withInstance(_ObjectObservationAdapter$ObserverLocator$Parser.ObjectObservationAdapter, new ComputedObservationAdapter());
+  aurelia.withInstance(_aureliaBinding.ObjectObservationAdapter, new ComputedObservationAdapter(aurelia.container));
 }
