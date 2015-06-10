@@ -25,8 +25,8 @@
       "lib": "dist/system"
     },
     "dependencies": {
-      "aurelia-binding": "github:aurelia/binding@^0.6.0",
-      "aurelia-logging": "github:aurelia/logging@^0.4.0",
+      "aurelia-binding": "github:aurelia/binding@^0.7.2",
+      "aurelia-logging": "github:aurelia/logging@^0.5.0",
       "core-js": "npm:core-js@^0.9.5"
     },
     "devDependencies": {
