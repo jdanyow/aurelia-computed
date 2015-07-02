@@ -20,13 +20,13 @@
   },
   "jspm": {
     "main": "index",
-    "format": "register",
+    "format": "amd",
     "directories": {
-      "lib": "dist/system"
+      "lib": "dist/amd"
     },
     "dependencies": {
-      "aurelia-binding": "github:aurelia/binding@^0.7.2",
-      "aurelia-logging": "github:aurelia/logging@^0.5.0",
+      "aurelia-binding": "github:aurelia/binding@^0.8.0",
+      "aurelia-logging": "github:aurelia/logging@^0.6.0",
       "core-js": "npm:core-js@^0.9.5"
     },
     "devDependencies": {
