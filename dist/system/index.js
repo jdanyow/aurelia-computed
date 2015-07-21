@@ -1,5 +1,5 @@
 System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-observer'], function (_export) {
-  var ObjectObservationAdapter, ObserverLocator, Parser, LogManager, Analyzer, GetterObserver, logger, parsed, ComputedObservationAdapter;
+  var ObjectObservationAdapter, ObserverLocator, Parser, LogManager, Analyzer, GetterObserver, logger, parsed, Configuration, ComputedObservationAdapter;
 
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -37,6 +37,14 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
       logger = LogManager.getLogger('aurelia-computed');
       parsed = {};
 
+      Configuration = function Configuration() {
+        _classCallCheck(this, Configuration);
+
+        this.enableLogging = true;
+      };
+
+      _export('Configuration', Configuration);
+
       ComputedObservationAdapter = (function () {
         function ComputedObservationAdapter(container) {
           _classCallCheck(this, ComputedObservationAdapter);
@@ -51,20 +59,27 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
               expression;
 
           if (!info) {
-            try {
-              body = getFunctionBody(src).trim().substr('return'.length).trim();
-              expression = this.parser.parse(body);
-            } catch (ex) {
+            if (/\[native code\]/.test(src)) {
               info = {
                 canObserve: false,
-                reason: 'Unable to parse \'' + propertyName + '\' property\'s getter function.\n' + src
+                nativeCode: true,
+                reason: 'Getter function contains native code.\n' + src
               };
+            } else {
+              try {
+                body = getFunctionBody(src).trim().substr('return'.length).trim();
+                expression = this.parser.parse(body);
+              } catch (ex) {
+                info = {
+                  canObserve: false,
+                  reason: 'Unable to parse \'' + propertyName + '\' property\'s getter function.\n' + src
+                };
+              }
             }
-
             info = parsed[src] = info || Analyzer.analyze(expression);
           }
 
-          if (!info.canObserve) {
+          if (!info.canObserve && !info.nativeCode && this.configuration.enableLogging) {
             logger.debug('Unable to observe \'' + propertyName + '\'.  ' + info.reason);
           }
 
@@ -87,6 +102,11 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
           key: 'observerLocator',
           get: function () {
             return this._observerLocator || (this._observerLocator = this.container.get(ObserverLocator));
+          }
+        }, {
+          key: 'configuration',
+          get: function () {
+            return this._configuration || (this._configuration = this.container.get(Configuration));
           }
         }, {
           key: 'bindingShim',

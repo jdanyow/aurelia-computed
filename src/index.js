@@ -18,6 +18,10 @@ function getFunctionBody(src) {
     return s.substring(s.indexOf('{') + 1, s.lastIndexOf('}'));
 }
 
+export class Configuration {
+  enableLogging = true;
+}
+
 export class ComputedObservationAdapter {
   constructor(container) {
     this.container = container;
@@ -29,21 +33,28 @@ export class ComputedObservationAdapter {
         body, expression;
 
     if (!info) {
-      try {
-        body = getFunctionBody(src).trim().substr('return'.length).trim();
-        expression = this.parser.parse(body);
+      if (/\[native code\]/.test(src)) {
+       info = {
+         canObserve: false,
+         nativeCode: true,
+         reason: `Getter function contains native code.\n${src}`
+       } 
+      } else {
+        try {
+          body = getFunctionBody(src).trim().substr('return'.length).trim();
+          expression = this.parser.parse(body);
+        }
+        catch(ex) {
+          info = {
+            canObserve: false,
+            reason: `Unable to parse '${propertyName}' property's getter function.\n${src}`
+          };
+        }
       }
-      catch(ex) {
-        info = {
-          canObserve: false,
-          reason: `Unable to parse '${propertyName}' property's getter function.\n${src}`
-        };
-      }
-
       info = parsed[src] = (info || Analyzer.analyze(expression));
     }
 
-    if (!info.canObserve) {
+    if (!info.canObserve && !info.nativeCode && this.configuration.enableLogging) {
       logger.debug(`Unable to observe '${propertyName}'.  ${info.reason}`)
     }
 
@@ -65,6 +76,11 @@ export class ComputedObservationAdapter {
   get observerLocator() {
     // lazily retrieve ObserverLocator instance because it's not available at plugin installation time.
     return this._observerLocator || (this._observerLocator = this.container.get(ObserverLocator));
+  }
+  
+  get configuration() {
+    // lazily retrieve Configuration instance because it's not available at plugin installation time.
+    return this._configuration || (this._configuration = this.container.get(Configuration));
   }
 
   get bindingShim() {

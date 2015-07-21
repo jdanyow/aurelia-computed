@@ -31,6 +31,14 @@ function getFunctionBody(src) {
   return s.substring(s.indexOf('{') + 1, s.lastIndexOf('}'));
 }
 
+var Configuration = function Configuration() {
+  _classCallCheck(this, Configuration);
+
+  this.enableLogging = true;
+};
+
+exports.Configuration = Configuration;
+
 var ComputedObservationAdapter = (function () {
   function ComputedObservationAdapter(container) {
     _classCallCheck(this, ComputedObservationAdapter);
@@ -45,20 +53,27 @@ var ComputedObservationAdapter = (function () {
         expression;
 
     if (!info) {
-      try {
-        body = getFunctionBody(src).trim().substr('return'.length).trim();
-        expression = this.parser.parse(body);
-      } catch (ex) {
+      if (/\[native code\]/.test(src)) {
         info = {
           canObserve: false,
-          reason: 'Unable to parse \'' + propertyName + '\' property\'s getter function.\n' + src
+          nativeCode: true,
+          reason: 'Getter function contains native code.\n' + src
         };
+      } else {
+        try {
+          body = getFunctionBody(src).trim().substr('return'.length).trim();
+          expression = this.parser.parse(body);
+        } catch (ex) {
+          info = {
+            canObserve: false,
+            reason: 'Unable to parse \'' + propertyName + '\' property\'s getter function.\n' + src
+          };
+        }
       }
-
       info = parsed[src] = info || _analyzer.Analyzer.analyze(expression);
     }
 
-    if (!info.canObserve) {
+    if (!info.canObserve && !info.nativeCode && this.configuration.enableLogging) {
       logger.debug('Unable to observe \'' + propertyName + '\'.  ' + info.reason);
     }
 
@@ -81,6 +96,11 @@ var ComputedObservationAdapter = (function () {
     key: 'observerLocator',
     get: function () {
       return this._observerLocator || (this._observerLocator = this.container.get(_aureliaBinding.ObserverLocator));
+    }
+  }, {
+    key: 'configuration',
+    get: function () {
+      return this._configuration || (this._configuration = this.container.get(Configuration));
     }
   }, {
     key: 'bindingShim',

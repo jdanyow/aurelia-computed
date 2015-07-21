@@ -1,7 +1,10 @@
 import {ObserverLocator, EventManager, DirtyChecker, Parser} from 'aurelia-binding';
 import {TaskQueue} from 'jspm_packages/github/aurelia/task-queue@0.6.0/index';
-import {ComputedObservationAdapter} from '../src/index';
+import {ComputedObservationAdapter, Configuration} from '../src/index';
 import {GetterObserver} from '../src/getter-observer';
+import * as LogManager from 'aurelia-logging';
+
+var logger = LogManager.getLogger('aurelia-computed')
 
 var baz = 'baz';
 class Foo {
@@ -29,19 +32,22 @@ class Foo {
 }
 
 describe('adapter', () => {
-  var observerLocator, adapter, foo, observer, dispose, change;
+  var observerLocator, adapter, foo, observer, dispose, change, configuration = new Configuration();
 
   beforeAll(() => {
     var parser = new Parser(),
         container = {};
     adapter = new ComputedObservationAdapter(container);
-    observerLocator = new ObserverLocator(new EventManager(), new DirtyChecker(), new TaskQueue(), [adapter]);
+    observerLocator = new ObserverLocator(new EventManager(), new DirtyChecker(), new TaskQueue(), [adapter]);    
     container.get = type => {
       if (type === ObserverLocator) {
         return observerLocator;
       }
       if (type === Parser) {
         return parser;
+      }
+      if (type === Configuration) {
+        return configuration;
       }
       throw new Error(`Unit test container doesn't handle '${type.name}'`);
     };
@@ -52,6 +58,17 @@ describe('adapter', () => {
     expect(adapter.handlesProperty(foo, 'bar', Object.getPropertyDescriptor(foo, 'bar'))).toBe(true);
     expect(adapter.handlesProperty(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'))).toBe(false);
     expect(adapter.handlesProperty(foo, 'xup', Object.getPropertyDescriptor(foo, 'xup'))).toBe(true);
+  // });
+  
+  // it('obeys enableLogging config', () => {
+    var foo = new Foo();
+    spyOn(logger, 'debug');
+    adapter.handlesProperty(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'));
+    expect(logger.debug).toHaveBeenCalled();
+    logger.debug.calls.reset();
+    configuration.enableLogging = false;
+    adapter.handlesProperty(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'));
+    expect(logger.debug).not.toHaveBeenCalled();
   });
 
   it('returns observer matching property-observer interface', () => {
