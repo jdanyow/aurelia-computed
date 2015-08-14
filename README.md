@@ -61,7 +61,7 @@ export class Foo {
 ## Dependencies
 
 * [aurelia-binding](https://github.com/aurelia/binding)
-* [aurelia-logging](https://github.com/aurelia-logging)
+* [aurelia-logging](https://github.com/aurelia/logging)
 
 ## Platform Support
 
