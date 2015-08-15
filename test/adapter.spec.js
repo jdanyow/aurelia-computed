@@ -1,5 +1,5 @@
 import {ObserverLocator, EventManager, DirtyChecker, Parser} from 'aurelia-binding';
-import {TaskQueue} from 'jspm_packages/github/aurelia/task-queue@0.6.0/index';
+import {TaskQueue} from 'jspm_packages/github/aurelia/task-queue@0.6.2/aurelia-task-queue';
 import {ComputedObservationAdapter, Configuration} from '../src/index';
 import {GetterObserver} from '../src/getter-observer';
 import * as LogManager from 'aurelia-logging';

@@ -92,6 +92,6 @@ export class ComputedObservationAdapter {
   }
 }
 
-export function configure(aurelia) {
-  aurelia.withInstance(ObjectObservationAdapter, new ComputedObservationAdapter(aurelia.container));
+export function configure(config) {
+  config.instance(ObjectObservationAdapter, new ComputedObservationAdapter(config.container));
 }
