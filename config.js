@@ -1,4 +1,5 @@
 System.config({
+  "defaultJSExtensions": true,
   "transpiler": "babel",
   "babelOptions": {
     "optional": [
@@ -8,32 +9,31 @@ System.config({
     ]
   },
   "paths": {
-    "*": "*.js",
-    "github:*": "jspm_packages/github/*.js",
+    "github:*": "jspm_packages/github/*",
     "aurelia-computed/*": "dist/*.js",
-    "npm:*": "jspm_packages/npm/*.js"
+    "npm:*": "jspm_packages/npm/*"
   }
 });
 
 System.config({
   "map": {
-    "aurelia-binding": "github:aurelia/binding@0.8.2",
-    "aurelia-logging": "github:aurelia/logging@0.6.1",
+    "aurelia-binding": "github:aurelia/binding@0.8.6",
+    "aurelia-logging": "github:aurelia/logging@0.6.4",
     "babel": "npm:babel-core@5.8.3",
     "babel-runtime": "npm:babel-runtime@5.8.3",
     "core-js": "npm:core-js@0.9.18",
-    "github:aurelia/binding@0.8.2": {
-      "aurelia-dependency-injection": "github:aurelia/dependency-injection@0.9.0",
-      "aurelia-metadata": "github:aurelia/metadata@0.7.0",
-      "aurelia-task-queue": "github:aurelia/task-queue@0.6.0",
+    "github:aurelia/binding@0.8.6": {
+      "aurelia-dependency-injection": "github:aurelia/dependency-injection@0.9.2",
+      "aurelia-metadata": "github:aurelia/metadata@0.7.3",
+      "aurelia-task-queue": "github:aurelia/task-queue@0.6.2",
       "core-js": "npm:core-js@0.9.18"
     },
-    "github:aurelia/dependency-injection@0.9.0": {
-      "aurelia-logging": "github:aurelia/logging@0.6.1",
-      "aurelia-metadata": "github:aurelia/metadata@0.7.0",
+    "github:aurelia/dependency-injection@0.9.2": {
+      "aurelia-logging": "github:aurelia/logging@0.6.4",
+      "aurelia-metadata": "github:aurelia/metadata@0.7.3",
       "core-js": "npm:core-js@0.9.18"
     },
-    "github:aurelia/metadata@0.7.0": {
+    "github:aurelia/metadata@0.7.3": {
       "core-js": "npm:core-js@0.9.18"
     },
     "github:jspm/nodelibs-process@0.1.1": {
