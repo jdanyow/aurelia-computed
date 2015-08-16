@@ -23,7 +23,7 @@ var GetterObserver = (function () {
     if (this.descriptor.set) {
       this.object[this.propertyName] = newValue;
     } else {
-      throw new Error("" + this.propertyName + " does not have a setter function.");
+      throw new Error(this.propertyName + " does not have a setter function.");
     }
   };
 

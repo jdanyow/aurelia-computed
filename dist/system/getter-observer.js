@@ -1,4 +1,6 @@
 System.register([], function (_export) {
+  "use strict";
+
   var GetterObserver;
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -6,8 +8,6 @@ System.register([], function (_export) {
   return {
     setters: [],
     execute: function () {
-      "use strict";
-
       GetterObserver = (function () {
         function GetterObserver(object, propertyName, descriptor, expression, binding) {
           _classCallCheck(this, GetterObserver);
@@ -27,7 +27,7 @@ System.register([], function (_export) {
           if (this.descriptor.set) {
             this.object[this.propertyName] = newValue;
           } else {
-            throw new Error("" + this.propertyName + " does not have a setter function.");
+            throw new Error(this.propertyName + " does not have a setter function.");
           }
         };
 

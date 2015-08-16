@@ -89,22 +89,22 @@ var ComputedObservationAdapter = (function () {
 
   _createClass(ComputedObservationAdapter, [{
     key: 'parser',
-    get: function () {
+    get: function get() {
       return this._parser || (this._parser = this.container.get(_aureliaBinding.Parser));
     }
   }, {
     key: 'observerLocator',
-    get: function () {
+    get: function get() {
       return this._observerLocator || (this._observerLocator = this.container.get(_aureliaBinding.ObserverLocator));
     }
   }, {
     key: 'configuration',
-    get: function () {
+    get: function get() {
       return this._configuration || (this._configuration = this.container.get(Configuration));
     }
   }, {
     key: 'bindingShim',
-    get: function () {
+    get: function get() {
       return this._bindingShim || (this._bindingShim = {
         getObserver: this.observerLocator.getObserver.bind(this.observerLocator),
         valueConverterLookupFunction: function valueConverterLookupFunction(name) {
@@ -119,6 +119,6 @@ var ComputedObservationAdapter = (function () {
 
 exports.ComputedObservationAdapter = ComputedObservationAdapter;
 
-function configure(aurelia) {
-  aurelia.withInstance(_aureliaBinding.ObjectObservationAdapter, new ComputedObservationAdapter(aurelia.container));
+function configure(config) {
+  config.instance(_aureliaBinding.ObjectObservationAdapter, new ComputedObservationAdapter(config.container));
 }

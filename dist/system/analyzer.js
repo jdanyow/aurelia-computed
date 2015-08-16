@@ -1,4 +1,6 @@
 System.register([], function (_export) {
+  'use strict';
+
   var Analyzer;
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -6,8 +8,6 @@ System.register([], function (_export) {
   return {
     setters: [],
     execute: function () {
-      'use strict';
-
       Analyzer = (function () {
         function Analyzer() {
           _classCallCheck(this, Analyzer);

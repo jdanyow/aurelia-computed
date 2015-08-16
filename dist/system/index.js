@@ -1,4 +1,6 @@
 System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-observer'], function (_export) {
+  'use strict';
+
   var ObjectObservationAdapter, ObserverLocator, Parser, LogManager, Analyzer, GetterObserver, logger, parsed, Configuration, ComputedObservationAdapter;
 
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -15,8 +17,8 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
     return s.substring(s.indexOf('{') + 1, s.lastIndexOf('}'));
   }
 
-  function configure(aurelia) {
-    aurelia.withInstance(ObjectObservationAdapter, new ComputedObservationAdapter(aurelia.container));
+  function configure(config) {
+    config.instance(ObjectObservationAdapter, new ComputedObservationAdapter(config.container));
   }
 
   return {
@@ -32,8 +34,6 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
       GetterObserver = _getterObserver.GetterObserver;
     }],
     execute: function () {
-      'use strict';
-
       logger = LogManager.getLogger('aurelia-computed');
       parsed = {};
 
@@ -95,22 +95,22 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
 
         _createClass(ComputedObservationAdapter, [{
           key: 'parser',
-          get: function () {
+          get: function get() {
             return this._parser || (this._parser = this.container.get(Parser));
           }
         }, {
           key: 'observerLocator',
-          get: function () {
+          get: function get() {
             return this._observerLocator || (this._observerLocator = this.container.get(ObserverLocator));
           }
         }, {
           key: 'configuration',
-          get: function () {
+          get: function get() {
             return this._configuration || (this._configuration = this.container.get(Configuration));
           }
         }, {
           key: 'bindingShim',
-          get: function () {
+          get: function get() {
             return this._bindingShim || (this._bindingShim = {
               getObserver: this.observerLocator.getObserver.bind(this.observerLocator),
               valueConverterLookupFunction: function valueConverterLookupFunction(name) {
