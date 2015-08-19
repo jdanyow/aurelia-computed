@@ -93,5 +93,5 @@ export class ComputedObservationAdapter {
 }
 
 export function configure(config) {
-  config.instance(ObjectObservationAdapter, new ComputedObservationAdapter(config.container));
+  config.container.registerInstance(ObjectObservationAdapter, new ComputedObservationAdapter(config.container));
 }

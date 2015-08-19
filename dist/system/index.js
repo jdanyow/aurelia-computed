@@ -18,7 +18,7 @@ System.register(['aurelia-binding', 'aurelia-logging', './analyzer', './getter-o
   }
 
   function configure(config) {
-    config.instance(ObjectObservationAdapter, new ComputedObservationAdapter(config.container));
+    config.container.registerInstance(ObjectObservationAdapter, new ComputedObservationAdapter(config.container));
   }
 
   return {

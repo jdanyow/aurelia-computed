@@ -109,6 +109,6 @@ define(['exports', 'aurelia-binding', 'aurelia-logging', './analyzer', './getter
   exports.ComputedObservationAdapter = ComputedObservationAdapter;
 
   function configure(config) {
-    config.instance(_aureliaBinding.ObjectObservationAdapter, new ComputedObservationAdapter(config.container));
+    config.container.registerInstance(_aureliaBinding.ObjectObservationAdapter, new ComputedObservationAdapter(config.container));
   }
 });

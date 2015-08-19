@@ -1,6 +1,6 @@
 {
   "name": "aurelia-computed",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "An Aurelia plugin for observing computed properties without dirty-checking.",
   "keywords": [
     "aurelia",
