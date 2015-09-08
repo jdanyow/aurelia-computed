@@ -1,5 +1,5 @@
 import {ObserverLocator, EventManager, DirtyChecker, Parser} from 'aurelia-binding';
-import {TaskQueue} from 'jspm_packages/github/aurelia/task-queue@0.6.2/aurelia-task-queue';
+import {TaskQueue} from 'jspm_packages/github/aurelia/task-queue@0.7.0/aurelia-task-queue';
 import {ComputedObservationAdapter, Configuration} from '../src/index';
 import {GetterObserver} from '../src/getter-observer';
 import * as LogManager from 'aurelia-logging';
@@ -38,7 +38,7 @@ describe('adapter', () => {
     var parser = new Parser(),
         container = {};
     adapter = new ComputedObservationAdapter(container);
-    observerLocator = new ObserverLocator(new EventManager(), new DirtyChecker(), new TaskQueue(), [adapter]);    
+    observerLocator = new ObserverLocator(new EventManager(), new DirtyChecker(), new TaskQueue(), [adapter]);
     container.get = type => {
       if (type === ObserverLocator) {
         return observerLocator;
@@ -59,7 +59,7 @@ describe('adapter', () => {
     expect(adapter.handlesProperty(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'))).toBe(false);
     expect(adapter.handlesProperty(foo, 'xup', Object.getPropertyDescriptor(foo, 'xup'))).toBe(true);
   // });
-  
+
   // it('obeys enableLogging config', () => {
     var foo = new Foo();
     spyOn(logger, 'debug');
