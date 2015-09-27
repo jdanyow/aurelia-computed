@@ -15,10 +15,8 @@ var jsName = paths.packageName + '.js';
 gulp.task('build-index', function(){
   var importsToAdd = [];
   var files = [
-    'ajax-adapter.js',
-    'promise-adapter.js',
-    'property-observation.js',
-    'observation-adapter.js',
+    'analyzer.js',
+    'getter-observer.js',
     'index.js'
     ].map(function(file){
       return paths.root + file;
