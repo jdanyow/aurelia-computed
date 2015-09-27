@@ -5,7 +5,7 @@ export class Analyzer {
   }
 
   static analyze(expression) {
-    var visitor = new Analyzer();
+    let visitor = new Analyzer();
     expression.accept(visitor);
     return {
       expression: expression,
@@ -15,18 +15,15 @@ export class Analyzer {
   }
 
   visitArgs(args) {
-    var i, length;
-    for (i = 0, length = args.length; i < length; ++i) {
+    for (let i = 0, length = args.length; i < length; ++i) {
       args[i].accept(this);
     }
   }
 
   visitChain(chain) {
-    var expressions = chain.expressions,
-        length = expressions.length,
-        i;
+    let expressions = chain.expressions;
 
-    for (i = 0; i < length; ++i) {
+    for (let i = 0, length = expressions.length; i < length; ++i) {
       expressions[i].accept(this);
     }
   }
@@ -89,20 +86,17 @@ export class Analyzer {
   }
 
   visitLiteralArray(literal) {
-    var elements = literal.elements,
-        length = elements.length,
-        i;
-    for (i = 0; i < length; ++i) {
+    let elements = literal.elements;
+    for (let i = 0, length = elements.length; i < length; ++i) {
       elements[i].accept(this);
     }
   }
 
   visitLiteralObject(literal) {
-    var keys = literal.keys,
-        values = literal.values,
-        length = keys.length,
-        i;
-    for (i = 0; i < length; ++i) {
+    let keys = literal.keys;
+    let values = literal.values;
+
+    for (let i = 0, length = keys.length; i < length; ++i) {
       values[i].accept(this);
     }
   }

@@ -8,11 +8,11 @@ let enableLogging = true;
 let parsed = {};
 
 function getFunctionBody(src) {
-    function removeCommentsFromSource(str) {
-        return str.replace(/(?:\/\*(?:[\s\S]*?)\*\/)|(?:([\s;])+\/\/(?:.*)$)/gm, '$1');
-    }
-    var s = removeCommentsFromSource(src);
-    return s.substring(s.indexOf('{') + 1, s.lastIndexOf('}'));
+  function removeCommentsFromSource(str) {
+    return str.replace(/(?:\/\*(?:[\s\S]*?)\*\/)|(?:([\s;])+\/\/(?:.*)$)/gm, '$1');
+  }
+  let s = removeCommentsFromSource(src);
+  return s.substring(s.indexOf('{') + 1, s.lastIndexOf('}'));
 }
 
 export class ComputedObservationAdapter {
@@ -30,17 +30,16 @@ export class ComputedObservationAdapter {
     if (!info) {
       let expression;
       if (/\[native code\]/.test(src)) {
-       info = {
-         canObserve: false,
-         nativeCode: true,
-         reason: `Getter function contains native code.\n${src}`
-       }
+        info = {
+          canObserve: false,
+          nativeCode: true,
+          reason: `Getter function contains native code.\n${src}`
+        };
       } else {
         try {
           let body = getFunctionBody(src).trim().substr('return'.length).trim();
           expression = this.parser.parse(body);
-        }
-        catch(ex) {
+        } catch (ex) {
           info = {
             canObserve: false,
             reason: `Unable to parse '${propertyName}' property's getter function.\n${src}`
@@ -51,10 +50,10 @@ export class ComputedObservationAdapter {
     }
 
     if (enableLogging && !info.canObserve && !info.nativeCode) {
-      logger.debug(`Unable to observe '${propertyName}'.  ${info.reason}`)
+      logger.debug(`Unable to observe '${propertyName}'.  ${info.reason}`);
     }
 
-    if(info.canObserve) {
+    if (info.canObserve) {
       return new GetterObserver(object, propertyName, descriptor, info.expression, this.bindingShim);
     }
     return null;
