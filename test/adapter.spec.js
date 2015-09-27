@@ -1,6 +1,6 @@
 import {ObserverLocator, EventManager, DirtyChecker, Parser} from 'aurelia-binding';
 import {TaskQueue} from 'jspm_packages/github/aurelia/task-queue@0.7.0/aurelia-task-queue';
-import {ComputedObservationAdapter, Configuration} from '../src/index';
+import {configure, ComputedObservationAdapter} from '../src/index';
 import {GetterObserver} from '../src/getter-observer';
 import * as LogManager from 'aurelia-logging';
 
@@ -31,66 +31,85 @@ class Foo {
   }
 }
 
-describe('adapter', () => {
-  var observerLocator, adapter, foo, observer, dispose, change, configuration = new Configuration();
+describe('plugin', () => {
+  let frameworkConfig;
 
   beforeAll(() => {
-    var parser = new Parser(),
-        container = {};
-    adapter = new ComputedObservationAdapter(container);
-    observerLocator = new ObserverLocator(new EventManager(), new DirtyChecker(), new TaskQueue(), [adapter]);
-    container.get = type => {
-      if (type === ObserverLocator) {
-        return observerLocator;
+    let parser = new Parser();
+    let observerLocator = new ObserverLocator(new EventManager(), new DirtyChecker(), new TaskQueue());
+    let adapter = new ComputedObservationAdapter(observerLocator, parser);
+    frameworkConfig = {
+      container: {
+        get: key => {
+          switch (key) {
+            case Parser:
+              return parser;
+            case ObserverLocator:
+              return observerLocator;
+            case ComputedObservationAdapter:
+              return adapter;
+            default:
+              throw new Error(`fake container doesn't handle ${key}.`);
+          }
+        }
       }
-      if (type === Parser) {
-        return parser;
-      }
-      if (type === Configuration) {
-        return configuration;
-      }
-      throw new Error(`Unit test container doesn't handle '${type.name}'`);
-    };
+    }
+  });
+
+  it('configures', () => {
+    configure(frameworkConfig);
+    let adapter = frameworkConfig.container.get(ComputedObservationAdapter);
+    expect(adapter instanceof ComputedObservationAdapter).toBe(true);
+  });
+
+  it('uses configuration', () => {
+    configure(frameworkConfig, { enableLogging: false });
+    let adapter = frameworkConfig.container.get(ComputedObservationAdapter);
+    expect(adapter instanceof ComputedObservationAdapter).toBe(true);
+
+    spyOn(logger, 'debug');
+    let foo = new Foo();
+    adapter.getObserver(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'));
+    expect(logger.debug).not.toHaveBeenCalled();
+
+    configure(frameworkConfig, { enableLogging: true });
+    logger.debug.calls.reset();
+    foo = new Foo();
+    adapter.getObserver(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'));
+    expect(logger.debug).toHaveBeenCalled();
+  });
+});
+
+describe('adapter', () => {
+  let adapter;
+
+  beforeAll(() => {
+    let parser = new Parser();
+    let observerLocator = new ObserverLocator(new EventManager(), new DirtyChecker(), new TaskQueue());
+    adapter = new ComputedObservationAdapter(observerLocator, parser);
   });
 
   it('handles properties that are observable', () => {
-    var foo = new Foo();
-    expect(adapter.handlesProperty(foo, 'bar', Object.getPropertyDescriptor(foo, 'bar'))).toBe(true);
-    expect(adapter.handlesProperty(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'))).toBe(false);
-    expect(adapter.handlesProperty(foo, 'xup', Object.getPropertyDescriptor(foo, 'xup'))).toBe(true);
-  // });
-
-  // it('obeys enableLogging config', () => {
-    var foo = new Foo();
-    spyOn(logger, 'debug');
-    adapter.handlesProperty(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'));
-    expect(logger.debug).toHaveBeenCalled();
-    logger.debug.calls.reset();
-    configuration.enableLogging = false;
-    adapter.handlesProperty(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'));
-    expect(logger.debug).not.toHaveBeenCalled();
+    let foo = new Foo();
+    expect(adapter.getObserver(foo, 'bar', Object.getPropertyDescriptor(foo, 'bar'))).not.toBe(null);
+    expect(adapter.getObserver(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'))).toBe(null);
+    expect(adapter.getObserver(foo, 'xup', Object.getPropertyDescriptor(foo, 'xup'))).not.toBe(null);
   });
 
   it('returns observer matching property-observer interface', () => {
-    var foo = new Foo(),
-        observer = observerLocator.getObserver(foo, 'bar');
+    let foo = new Foo();
+    let observer = adapter.getObserver(foo, 'bar', Object.getPropertyDescriptor(foo, 'bar'));
     expect(observer instanceof GetterObserver).toBe(true);
     expect(observer.propertyName).toBe('bar');
     expect(Object.prototype.toString.call(observer.getValue)).toBe('[object Function]');
     expect(Object.prototype.toString.call(observer.setValue)).toBe('[object Function]');
     expect(Object.prototype.toString.call(observer.subscribe)).toBe('[object Function]');
-  });
-
-  it('reuses property observers', () => {
-    var foo = new Foo(),
-        observer1 = observerLocator.getObserver(foo, 'bar'),
-        observer2 = observerLocator.getObserver(foo, 'bar');
-    expect(observer1).toBe(observer2);
+    expect(Object.prototype.toString.call(observer.unsubscribe)).toBe('[object Function]');
   });
 
   it('gets and sets value', () => {
     var foo = new Foo(),
-        observer = observerLocator.getObserver(foo, 'bar');
+        observer = adapter.getObserver(foo, 'bar', Object.getPropertyDescriptor(foo, 'bar'));
     expect(observer.getValue()).toBe(foo.bar);
     foo.bar = 'test';
     expect(observer.getValue()).toBe(foo.bar);
@@ -99,25 +118,29 @@ describe('adapter', () => {
   });
 
   it('throws when attempting to setValue on property with no setter', () => {
-    var foo = new Foo(),
-        observer = observerLocator.getObserver(foo, 'xup');
+    let foo = new Foo();
+    let observer = adapter.getObserver(foo, 'xup', Object.getPropertyDescriptor(foo, 'xup'));
     expect(observer.getValue()).toBe(foo.xup);
     expect(() => observer.setValue('test')).toThrow(new Error('xup does not have a setter function.'));
   });
 
-  it('subscribes', () => {
-    foo = new Foo();
-    observer = observerLocator.getObserver(foo, 'bar');
-    dispose = observer.subscribe((newValue, oldValue) => {
-      change = {
-        newValue: newValue,
-        oldValue: oldValue
-      };
-    });
-    expect(Object.prototype.toString.call(dispose)).toBe('[object Function]');
-  });
-
-  it('tracks changes while subscribed', done => {
+  it('observes', done => {
+    let foo = new Foo();
+    let observer = adapter.getObserver(foo, 'bar', Object.getPropertyDescriptor(foo, 'bar'));
+    let change = null;
+    let context = 'test context';
+    let callable = {
+      call: (context, newValue, oldValue) => {
+        change = {
+          newValue: newValue,
+          oldValue: oldValue
+        };
+      }
+    };
+    expect(observer.hasSubscribers()).toBe(false);
+    observer.subscribe(context, callable);
+    expect(observer.hasSubscribers()).toBe(true);
+    expect(observer.hasSubscriber(context, callable)).toBe(true);
     change = null;
     foo.bar = 'test';
     setTimeout(() => {
@@ -126,50 +149,34 @@ describe('adapter', () => {
       observer.setValue('test 2');
       setTimeout(() => {
         expect(change && change.newValue === 'test 2' && change.oldValue === 'test').toBe(true);
-        done();
-      }, 0);
-    }, 0);
-  });
+        observer.unsubscribe(context, callable);
+        expect(observer.hasSubscribers()).toBe(false);
+        expect(observer.hasSubscriber(context, callable)).toBe(false);
+        observer.unsubscribe(context, callable); // multiple unsubscribe should be harmless.
 
-  it('unsubscribes', done => {
-    expect(observer.observer === null).toBe(false);
-    dispose();
-    expect(observer.observer === null).toBe(true);
-    dispose(); // extra dispose to check whether disposing multiple times throws.
+        change = null;
+        foo.bar = 'test 3';
+        setTimeout(() => {
+          expect(change).toBe(null);
+          change = null;
+          observer.setValue('test 4');
+          setTimeout(() => {
+            expect(change).toBe(null);
 
-    change = null;
-    foo.bar = 'test 3';
-    setTimeout(() => {
-      expect(change).toBe(null);
-      change = null;
-      observer.setValue('test 4');
-      setTimeout(() => {
-        expect(change).toBe(null);
-        done();
-      }, 0);
-    }, 0);
-  });
-
-  it('re-subscribes', () => {
-    dispose = observer.subscribe((newValue, oldValue) => {
-      change = {
-        newValue: newValue,
-        oldValue: oldValue
-      };
-    });
-    expect(Object.prototype.toString.call(dispose)).toBe('[object Function]');
-  });
-
-  it('tracks changes after re-subscribing', done => {
-    change = null;
-    foo.bar = 'test';
-    setTimeout(() => {
-      expect(change && change.newValue === 'test' && change.oldValue === 'test 4').toBe(true);
-      change = null;
-      observer.setValue('test 2');
-      setTimeout(() => {
-        expect(change && change.newValue === 'test 2' && change.oldValue === 'test').toBe(true);
-        done();
+            observer.subscribe(context, callable);
+            foo.bar = 'test';
+            setTimeout(() => {
+              expect(change && change.newValue === 'test' && change.oldValue === 'test 4').toBe(true);
+              change = null;
+              observer.setValue('test 2');
+              setTimeout(() => {
+                expect(change && change.newValue === 'test 2' && change.oldValue === 'test').toBe(true);
+                observer.unsubscribe(context, callable);
+                done();
+              }, 0);
+            }, 0);
+          }, 0);
+        }, 0);
       }, 0);
     }, 0);
   });

@@ -15,12 +15,12 @@ System.config({
   },
 
   map: {
-    "aurelia-binding": "github:aurelia/binding@0.9.0",
+    "aurelia-binding": "github:aurelia/binding@0.9.1",
     "aurelia-logging": "github:aurelia/logging@0.7.0",
     "babel": "npm:babel-core@5.8.3",
     "babel-runtime": "npm:babel-runtime@5.8.3",
     "core-js": "npm:core-js@0.9.18",
-    "github:aurelia/binding@0.9.0": {
+    "github:aurelia/binding@0.9.1": {
       "aurelia-dependency-injection": "github:aurelia/dependency-injection@0.10.1",
       "aurelia-metadata": "github:aurelia/metadata@0.8.0",
       "aurelia-task-queue": "github:aurelia/task-queue@0.7.0",

@@ -1,3 +1,6 @@
+import {subscriberCollection} from 'aurelia-binding';
+
+@subscriberCollection()
 export class GetterObserver {
   constructor(object, propertyName, descriptor, expression, binding) {
     this.object = object;
@@ -19,50 +22,30 @@ export class GetterObserver {
     }
   }
 
-  subscribe(callback) {
-    var callbacks = this.callbacks || (this.callbacks = []),
-        info;
-
-    if (callbacks.length === 0) {
-      info = this.expression.connect(this.binding, { this: this.object });
+  subscribe(context, callable) {
+    if (!this.hasSubscribers()) {
+      let info = this.expression.connect(this.binding, { this: this.object });
       this.oldValue = this.getValue();
       if (info.observer) {
         this.observer = info.observer;
-        info.observer.subscribe(() => this.notify());
+        this.observer.subscribe('aurelia-computed', this);
       }
     }
-
-    callbacks.push(callback);
-
-    return this.unsubscribe.bind(this, callback);
+    this.addSubscriber(context, callable);
   }
 
-  notify() {
-    var i, ii,
-        newValue = this.getValue(),
-        oldValue = this.oldValue,
-        callbacks = this.callbacks;
-    if (newValue === oldValue) {
+  unsubscribe(context, callable) {
+    if (this.removeSubscriber(context, callable) && this.observer && !this.hasSubscribers()) {
+      this.observer.unsubscribe('aurelia-computed', this);
+    }
+  }
+
+  call(context) {
+    let newValue = this.getValue();
+    if (newValue === this.oldValue) {
       return;
     }
+    this.callSubscribers(newValue, this.oldValue);
     this.oldValue = newValue;
-    for(i = 0, ii = callbacks.length; i < ii; i++) {
-      callbacks[i](newValue, oldValue);
-    }
-  }
-
-  unsubscribe(callback) {
-    var callbacks = this.callbacks,
-        index = callbacks.indexOf(callback);
-    if (index === -1) {
-      return;
-    }
-    callbacks.splice(index, 1);
-    if (callbacks.length === 0 && this.observer) {
-      if (this.observer.dispose) {
-        this.observer.dispose();
-      }
-      this.observer = null;
-    }
   }
 }
