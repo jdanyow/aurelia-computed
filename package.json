@@ -1,6 +1,6 @@
 {
   "name": "aurelia-computed",
-  "version": "1.0.0",
+  "version": "0.7.0",
   "description": "An Aurelia plugin for observing computed properties without dirty-checking.",
   "keywords": [
     "aurelia",
@@ -25,11 +25,13 @@
       "lib": "dist/amd"
     },
     "dependencies": {
-      "aurelia-binding": "github:aurelia/binding@^0.9.1",
-      "aurelia-logging": "github:aurelia/logging@^0.7.0",
+      "aurelia-binding": "github:aurelia/binding@^0.10.0",
+      "aurelia-logging": "github:aurelia/logging@^0.8.0",
       "core-js": "npm:core-js@^0.9.5"
     },
     "devDependencies": {
+      "aurelia-pal": "github:aurelia/pal@^0.2.0",
+      "aurelia-pal-browser": "github:aurelia/pal-browser@^0.2.0",
       "babel": "npm:babel-core@^5.1.13",
       "babel-runtime": "npm:babel-runtime@^5.1.13",
       "core-js": "npm:core-js@^0.9.5"

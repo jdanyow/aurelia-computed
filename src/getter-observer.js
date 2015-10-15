@@ -1,22 +1,25 @@
-import {subscriberCollection} from 'aurelia-binding';
+import {subscriberCollection, connectable} from 'aurelia-binding';
 
+let valueConverterLookupFunction = () => null;
+
+@connectable()
 @subscriberCollection()
 export class GetterObserver {
-  constructor(object, propertyName, descriptor, expression, binding) {
-    this.object = object;
+  constructor(scope, propertyName, descriptor, expression, observerLocator) {
+    this.scope = scope;
     this.propertyName = propertyName;
     this.descriptor = descriptor;
     this.expression = expression;
-    this.binding = binding;
+    this.observerLocator = observerLocator;
   }
 
   getValue() {
-    return this.object[this.propertyName];
+    return this.scope[this.propertyName];
   }
 
   setValue(newValue) {
     if (this.descriptor.set) {
-      this.object[this.propertyName] = newValue;
+      this.scope[this.propertyName] = newValue;
     } else {
       throw new Error(`${this.propertyName} does not have a setter function.`);
     }
@@ -24,28 +27,27 @@ export class GetterObserver {
 
   subscribe(context, callable) {
     if (!this.hasSubscribers()) {
-      let info = this.expression.connect(this.binding, { this: this.object });
-      this.oldValue = this.getValue();
-      if (info.observer) {
-        this.observer = info.observer;
-        this.observer.subscribe('aurelia-computed', this);
-      }
+      this.oldValue = this.scope[this.propertyName];
+      this.expression.connect(this, { this: this.scope });
     }
     this.addSubscriber(context, callable);
   }
 
   unsubscribe(context, callable) {
-    if (this.removeSubscriber(context, callable) && this.observer && !this.hasSubscribers()) {
-      this.observer.unsubscribe('aurelia-computed', this);
+    if (this.removeSubscriber(context, callable) && !this.hasSubscribers(context, callable)) {
+      this.unobserve(true);
     }
   }
 
-  call(context) {
-    let newValue = this.getValue();
-    if (newValue === this.oldValue) {
-      return;
+  call() {
+    let newValue = this.scope[this.propertyName];
+    let oldValue = this.oldValue;
+    if (newValue !== oldValue) {
+      this.oldValue = newValue;
+      this.callSubscribers(newValue, oldValue);
     }
-    this.callSubscribers(newValue, this.oldValue);
-    this.oldValue = newValue;
+    this._version++;
+    this.expression.connect(this, { this: this.scope });
+    this.unobserve(false);
   }
 }

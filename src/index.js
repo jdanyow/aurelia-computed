@@ -54,17 +54,9 @@ export class ComputedObservationAdapter {
     }
 
     if (info.canObserve) {
-      return new GetterObserver(object, propertyName, descriptor, info.expression, this.bindingShim);
+      return new GetterObserver(object, propertyName, descriptor, info.expression, this.observerLocator);
     }
     return null;
-  }
-
-  get bindingShim() {
-    // an object that implements part of the Binding interface to be used when "connect"ing expressions.
-    return this._bindingShim || (this._bindingShim = {
-      getObserver: this.observerLocator.getObserver.bind(this.observerLocator),
-      valueConverterLookupFunction: name => null
-    });
   }
 }
 
