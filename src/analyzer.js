@@ -32,6 +32,10 @@ export class Analyzer {
     // this should never happen.
   }
 
+  visitBindingBehavior(behavior) {
+    // this should never happen.
+  }
+
   visitAssign(assign) {
     assign.target.accept(this);
     assign.value.accept(this);
@@ -41,6 +45,10 @@ export class Analyzer {
     conditional.condition.accept(this);
     conditional.yes.accept(this);
     conditional.no.accept(this);
+  }
+
+  visitAccessThis(access) {
+    // this should never happen.
   }
 
   visitAccessScope(access) {

@@ -1,7 +1,7 @@
 System.register(['aurelia-logging', 'aurelia-binding'], function (_export) {
   'use strict';
 
-  var LogManager, subscriberCollection, connectable, ObserverLocator, Parser, Analyzer, valueConverterLookupFunction, GetterObserver, logger, enableLogging, parsed, ComputedObservationAdapter;
+  var LogManager, subscriberCollection, connectable, createOverrideContext, ObserverLocator, Parser, Analyzer, valueConverterLookupFunction, GetterObserver, logger, enableLogging, parsed, ComputedObservationAdapter;
 
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -34,6 +34,7 @@ System.register(['aurelia-logging', 'aurelia-binding'], function (_export) {
     }, function (_aureliaBinding) {
       subscriberCollection = _aureliaBinding.subscriberCollection;
       connectable = _aureliaBinding.connectable;
+      createOverrideContext = _aureliaBinding.createOverrideContext;
       ObserverLocator = _aureliaBinding.ObserverLocator;
       Parser = _aureliaBinding.Parser;
     }],
@@ -72,6 +73,8 @@ System.register(['aurelia-logging', 'aurelia-binding'], function (_export) {
 
         Analyzer.prototype.visitValueConverter = function visitValueConverter(converter) {};
 
+        Analyzer.prototype.visitBindingBehavior = function visitBindingBehavior(behavior) {};
+
         Analyzer.prototype.visitAssign = function visitAssign(assign) {
           assign.target.accept(this);
           assign.value.accept(this);
@@ -82,6 +85,8 @@ System.register(['aurelia-logging', 'aurelia-binding'], function (_export) {
           conditional.yes.accept(this);
           conditional.no.accept(this);
         };
+
+        Analyzer.prototype.visitAccessThis = function visitAccessThis(access) {};
 
         Analyzer.prototype.visitAccessScope = function visitAccessScope(access) {
           if (access.name !== 'this') {
@@ -152,10 +157,13 @@ System.register(['aurelia-logging', 'aurelia-binding'], function (_export) {
       };
 
       GetterObserver = (function () {
-        function GetterObserver(scope, propertyName, descriptor, expression, observerLocator) {
+        function GetterObserver(obj, propertyName, descriptor, expression, observerLocator) {
           _classCallCheck(this, _GetterObserver);
 
-          this.scope = scope;
+          this.obj = obj;
+          var bindingContext = { 'this': obj };
+          var overrideContext = createOverrideContext(bindingContext);
+          this.scope = { bindingContext: bindingContext, overrideContext: overrideContext };
           this.propertyName = propertyName;
           this.descriptor = descriptor;
           this.expression = expression;
@@ -163,12 +171,12 @@ System.register(['aurelia-logging', 'aurelia-binding'], function (_export) {
         }
 
         GetterObserver.prototype.getValue = function getValue() {
-          return this.scope[this.propertyName];
+          return this.obj[this.propertyName];
         };
 
         GetterObserver.prototype.setValue = function setValue(newValue) {
           if (this.descriptor.set) {
-            this.scope[this.propertyName] = newValue;
+            this.obj[this.propertyName] = newValue;
           } else {
             throw new Error(this.propertyName + ' does not have a setter function.');
           }
@@ -176,8 +184,8 @@ System.register(['aurelia-logging', 'aurelia-binding'], function (_export) {
 
         GetterObserver.prototype.subscribe = function subscribe(context, callable) {
           if (!this.hasSubscribers()) {
-            this.oldValue = this.scope[this.propertyName];
-            this.expression.connect(this, { 'this': this.scope });
+            this.oldValue = this.obj[this.propertyName];
+            this.expression.connect(this, this.scope);
           }
           this.addSubscriber(context, callable);
         };
@@ -189,14 +197,14 @@ System.register(['aurelia-logging', 'aurelia-binding'], function (_export) {
         };
 
         GetterObserver.prototype.call = function call() {
-          var newValue = this.scope[this.propertyName];
+          var newValue = this.obj[this.propertyName];
           var oldValue = this.oldValue;
           if (newValue !== oldValue) {
             this.oldValue = newValue;
             this.callSubscribers(newValue, oldValue);
           }
           this._version++;
-          this.expression.connect(this, { 'this': this.scope });
+          this.expression.connect(this, this.scope);
           this.unobserve(false);
         };
 

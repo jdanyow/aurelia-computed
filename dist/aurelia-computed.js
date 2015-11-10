@@ -1,5 +1,5 @@
 import * as LogManager from 'aurelia-logging';
-import {subscriberCollection,connectable,ObserverLocator,Parser} from 'aurelia-binding';
+import {subscriberCollection,connectable,createOverrideContext,ObserverLocator,Parser} from 'aurelia-binding';
 
 export class Analyzer {
   constructor() {
@@ -35,6 +35,10 @@ export class Analyzer {
     // this should never happen.
   }
 
+  visitBindingBehavior(behavior) {
+    // this should never happen.
+  }
+
   visitAssign(assign) {
     assign.target.accept(this);
     assign.value.accept(this);
@@ -44,6 +48,10 @@ export class Analyzer {
     conditional.condition.accept(this);
     conditional.yes.accept(this);
     conditional.no.accept(this);
+  }
+
+  visitAccessThis(access) {
+    // this should never happen.
   }
 
   visitAccessScope(access) {
@@ -113,8 +121,11 @@ let valueConverterLookupFunction = () => null;
 @connectable()
 @subscriberCollection()
 export class GetterObserver {
-  constructor(scope, propertyName, descriptor, expression, observerLocator) {
-    this.scope = scope;
+  constructor(obj, propertyName, descriptor, expression, observerLocator) {
+    this.obj = obj;
+    let bindingContext = { this: obj };
+    let overrideContext = createOverrideContext(bindingContext);
+    this.scope = { bindingContext, overrideContext };
     this.propertyName = propertyName;
     this.descriptor = descriptor;
     this.expression = expression;
@@ -122,12 +133,12 @@ export class GetterObserver {
   }
 
   getValue() {
-    return this.scope[this.propertyName];
+    return this.obj[this.propertyName];
   }
 
   setValue(newValue) {
     if (this.descriptor.set) {
-      this.scope[this.propertyName] = newValue;
+      this.obj[this.propertyName] = newValue;
     } else {
       throw new Error(`${this.propertyName} does not have a setter function.`);
     }
@@ -135,8 +146,8 @@ export class GetterObserver {
 
   subscribe(context, callable) {
     if (!this.hasSubscribers()) {
-      this.oldValue = this.scope[this.propertyName];
-      this.expression.connect(this, { this: this.scope });
+      this.oldValue = this.obj[this.propertyName];
+      this.expression.connect(this, this.scope);
     }
     this.addSubscriber(context, callable);
   }
@@ -148,14 +159,14 @@ export class GetterObserver {
   }
 
   call() {
-    let newValue = this.scope[this.propertyName];
+    let newValue = this.obj[this.propertyName];
     let oldValue = this.oldValue;
     if (newValue !== oldValue) {
       this.oldValue = newValue;
       this.callSubscribers(newValue, oldValue);
     }
     this._version++;
-    this.expression.connect(this, { this: this.scope });
+    this.expression.connect(this, this.scope);
     this.unobserve(false);
   }
 }

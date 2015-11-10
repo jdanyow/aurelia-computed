@@ -1,6 +1,6 @@
 declare module 'aurelia-computed' {
   import * as LogManager from 'aurelia-logging';
-  import { subscriberCollection, connectable, ObserverLocator, Parser }  from 'aurelia-binding';
+  import { subscriberCollection, connectable, createOverrideContext, ObserverLocator, Parser }  from 'aurelia-binding';
   export class Analyzer {
     constructor();
     static analyze(expression: any): any;
@@ -9,8 +9,14 @@ declare module 'aurelia-computed' {
     visitValueConverter(converter: any): any;
     
     //  this should never happen.
+    visitBindingBehavior(behavior: any): any;
+    
+    //  this should never happen.
     visitAssign(assign: any): any;
     visitConditional(conditional: any): any;
+    visitAccessThis(access: any): any;
+    
+    //  this should never happen.
     visitAccessScope(access: any): any;
     visitAccessMember(access: any): any;
     visitAccessKeyed(access: any): any;
@@ -25,7 +31,7 @@ declare module 'aurelia-computed' {
     visitLiteralString(literal: any): any;
   }
   export class GetterObserver {
-    constructor(scope: any, propertyName: any, descriptor: any, expression: any, observerLocator: any);
+    constructor(obj: any, propertyName: any, descriptor: any, expression: any, observerLocator: any);
     getValue(): any;
     setValue(newValue: any): any;
     subscribe(context: any, callable: any): any;

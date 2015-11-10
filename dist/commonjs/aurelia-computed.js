@@ -50,6 +50,8 @@ var Analyzer = (function () {
 
   Analyzer.prototype.visitValueConverter = function visitValueConverter(converter) {};
 
+  Analyzer.prototype.visitBindingBehavior = function visitBindingBehavior(behavior) {};
+
   Analyzer.prototype.visitAssign = function visitAssign(assign) {
     assign.target.accept(this);
     assign.value.accept(this);
@@ -60,6 +62,8 @@ var Analyzer = (function () {
     conditional.yes.accept(this);
     conditional.no.accept(this);
   };
+
+  Analyzer.prototype.visitAccessThis = function visitAccessThis(access) {};
 
   Analyzer.prototype.visitAccessScope = function visitAccessScope(access) {
     if (access.name !== 'this') {
@@ -130,10 +134,13 @@ var valueConverterLookupFunction = function valueConverterLookupFunction() {
 };
 
 var GetterObserver = (function () {
-  function GetterObserver(scope, propertyName, descriptor, expression, observerLocator) {
+  function GetterObserver(obj, propertyName, descriptor, expression, observerLocator) {
     _classCallCheck(this, _GetterObserver);
 
-    this.scope = scope;
+    this.obj = obj;
+    var bindingContext = { 'this': obj };
+    var overrideContext = _aureliaBinding.createOverrideContext(bindingContext);
+    this.scope = { bindingContext: bindingContext, overrideContext: overrideContext };
     this.propertyName = propertyName;
     this.descriptor = descriptor;
     this.expression = expression;
@@ -141,12 +148,12 @@ var GetterObserver = (function () {
   }
 
   GetterObserver.prototype.getValue = function getValue() {
-    return this.scope[this.propertyName];
+    return this.obj[this.propertyName];
   };
 
   GetterObserver.prototype.setValue = function setValue(newValue) {
     if (this.descriptor.set) {
-      this.scope[this.propertyName] = newValue;
+      this.obj[this.propertyName] = newValue;
     } else {
       throw new Error(this.propertyName + ' does not have a setter function.');
     }
@@ -154,8 +161,8 @@ var GetterObserver = (function () {
 
   GetterObserver.prototype.subscribe = function subscribe(context, callable) {
     if (!this.hasSubscribers()) {
-      this.oldValue = this.scope[this.propertyName];
-      this.expression.connect(this, { 'this': this.scope });
+      this.oldValue = this.obj[this.propertyName];
+      this.expression.connect(this, this.scope);
     }
     this.addSubscriber(context, callable);
   };
@@ -167,14 +174,14 @@ var GetterObserver = (function () {
   };
 
   GetterObserver.prototype.call = function call() {
-    var newValue = this.scope[this.propertyName];
+    var newValue = this.obj[this.propertyName];
     var oldValue = this.oldValue;
     if (newValue !== oldValue) {
       this.oldValue = newValue;
       this.callSubscribers(newValue, oldValue);
     }
     this._version++;
-    this.expression.connect(this, { 'this': this.scope });
+    this.expression.connect(this, this.scope);
     this.unobserve(false);
   };
 
