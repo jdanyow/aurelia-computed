@@ -38,7 +38,7 @@ describe('plugin', () => {
 
   beforeAll(() => {
     let parser = new Parser();
-    let observerLocator = new ObserverLocator(new EventManager(), new DirtyChecker(), new TaskQueue());
+    let observerLocator = new ObserverLocator(new TaskQueue(), new EventManager(), new DirtyChecker());
     let adapter = new ComputedObservationAdapter(observerLocator, parser);
     frameworkConfig = {
       container: {
@@ -87,7 +87,7 @@ describe('adapter', () => {
 
   beforeAll(() => {
     let parser = new Parser();
-    let observerLocator = new ObserverLocator(new EventManager(), new DirtyChecker(), new TaskQueue());
+    let observerLocator = new ObserverLocator(new TaskQueue(), new EventManager(), new DirtyChecker());
     adapter = new ComputedObservationAdapter(observerLocator, parser);
   });
 

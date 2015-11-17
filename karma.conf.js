@@ -36,16 +36,13 @@ module.exports = function(config) {
     'babelPreprocessor': {
       options: {
         sourceMap: 'inline',
-        modules: 'system',
+        modules: 'amd',
         moduleIds: false,
         loose: "all",
-        optional: [
-          "es7.decorators",
-          "es7.classProperties"
-        ]
+        stage: 0,
+        optional: []
       }
     },
-
 
     // test results reporter to use
     // possible values: 'dots', 'progress'

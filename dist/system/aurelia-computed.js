@@ -249,6 +249,7 @@ System.register(['aurelia-logging', 'aurelia-binding'], function (_export) {
             } else {
               try {
                 var body = getFunctionBody(src).trim().substr('return'.length).trim();
+                body = body.replace(/;$/, '');
                 expression = this.parser.parse(body);
               } catch (ex) {
                 info = {

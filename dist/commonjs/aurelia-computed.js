@@ -234,6 +234,7 @@ var ComputedObservationAdapter = (function () {
       } else {
         try {
           var body = getFunctionBody(src).trim().substr('return'.length).trim();
+          body = body.replace(/;$/, '');
           expression = this.parser.parse(body);
         } catch (ex) {
           info = {
