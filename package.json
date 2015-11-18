@@ -1,6 +1,6 @@
 {
   "name": "aurelia-computed",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "An Aurelia plugin for observing computed properties without dirty-checking.",
   "keywords": [
     "aurelia",
@@ -18,6 +18,7 @@
     "type": "git",
     "url": "http://github.com/jdanyow/aurelia-computed"
   },
+  "jspmNodeConversion": false,
   "jspm": {
     "main": "index",
     "format": "amd",
