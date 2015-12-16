@@ -51,8 +51,10 @@ export class Foo {
   export function configure(aurelia) {
     aurelia.use
       .standardConfiguration()
-      .developmentLogging()         // enable debug logging to see aurelia-computed's observability messages.
-      .plugin('aurelia-computed');  // install the plugin
+      .developmentLogging()
+      .plugin('aurelia-computed', { // install the plugin
+        enableLogging: true // enable debug logging to see aurelia-computed's observability messages.
+      });
 
     aurelia.start().then(a => a.setRoot());
   }
