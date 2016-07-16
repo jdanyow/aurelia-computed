@@ -1,7 +1,9 @@
-import * as LogManager from 'aurelia-logging';
-import {subscriberCollection,connectable,createOverrideContext,ObserverLocator,Parser} from 'aurelia-binding';
+var _dec, _dec2, _class, _class2, _temp;
 
-export class Analyzer {
+import * as LogManager from 'aurelia-logging';
+import { subscriberCollection, connectable, createOverrideContext, ObserverLocator, Parser } from 'aurelia-binding';
+
+export let Analyzer = class Analyzer {
   constructor() {
     this.canObserve = true;
     this.reason = '';
@@ -31,13 +33,9 @@ export class Analyzer {
     }
   }
 
-  visitValueConverter(converter) {
-    // this should never happen.
-  }
+  visitValueConverter(converter) {}
 
-  visitBindingBehavior(behavior) {
-    // this should never happen.
-  }
+  visitBindingBehavior(behavior) {}
 
   visitAssign(assign) {
     assign.target.accept(this);
@@ -50,14 +48,12 @@ export class Analyzer {
     conditional.no.accept(this);
   }
 
-  visitAccessThis(access) {
-    // this should never happen.
-  }
+  visitAccessThis(access) {}
 
   visitAccessScope(access) {
     if (access.name !== 'this') {
       this.canObserve = false;
-      this.reason += `'${access.name}' can't be accessed from the binding scope.  `;
+      this.reason += `'${ access.name }' can't be accessed from the binding scope.  `;
     }
   }
 
@@ -93,8 +89,7 @@ export class Analyzer {
     binary.right.accept(this);
   }
 
-  visitLiteralPrimitive(literal) {
-  }
+  visitLiteralPrimitive(literal) {}
 
   visitLiteralArray(literal) {
     let elements = literal.elements;
@@ -112,15 +107,12 @@ export class Analyzer {
     }
   }
 
-  visitLiteralString(literal) {
-  }
-}
+  visitLiteralString(literal) {}
+};
 
 let valueConverterLookupFunction = () => null;
 
-@connectable()
-@subscriberCollection()
-export class GetterObserver {
+export let GetterObserver = (_dec = connectable(), _dec2 = subscriberCollection(), _dec(_class = _dec2(_class = class GetterObserver {
   constructor(obj, propertyName, descriptor, expression, observerLocator) {
     this.obj = obj;
     let bindingContext = { this: obj };
@@ -140,7 +132,7 @@ export class GetterObserver {
     if (this.descriptor.set) {
       this.obj[this.propertyName] = newValue;
     } else {
-      throw new Error(`${this.propertyName} does not have a setter function.`);
+      throw new Error(`${ this.propertyName } does not have a setter function.`);
     }
   }
 
@@ -169,10 +161,11 @@ export class GetterObserver {
     this.expression.connect(this, this.scope);
     this.unobserve(false);
   }
-}
+}) || _class) || _class);
 
 let logger = LogManager.getLogger('aurelia-computed');
 let enableLogging = true;
+let writeLog = (propertyName, reason) => logger.debug(`Unable to observe '${ propertyName }'.  ${ reason }`);
 let parsed = {};
 
 function getFunctionBody(src) {
@@ -183,8 +176,7 @@ function getFunctionBody(src) {
   return s.substring(s.indexOf('{') + 1, s.lastIndexOf('}'));
 }
 
-export class ComputedObservationAdapter {
-  static inject = [ObserverLocator, Parser];
+export let ComputedObservationAdapter = (_temp = _class2 = class ComputedObservationAdapter {
 
   constructor(observerLocator, parser) {
     this.observerLocator = observerLocator;
@@ -201,25 +193,27 @@ export class ComputedObservationAdapter {
         info = {
           canObserve: false,
           nativeCode: true,
-          reason: `Getter function contains native code.\n${src}`
+          reason: `Getter function contains native code.\n${ src }`
         };
       } else {
         try {
-          let body = getFunctionBody(src).trim().substr('return'.length).trim();
+          let body = getFunctionBody(src).trim();
+          body = body.replace(/^['"]use strict['"];/, '').trim();
+          body = body.substr('return'.length).trim();
           body = body.replace(/;$/, '');
           expression = this.parser.parse(body);
         } catch (ex) {
           info = {
             canObserve: false,
-            reason: `Unable to parse '${propertyName}' property's getter function.\n${src}`
+            reason: `Unable to parse '${ propertyName }' property's getter function.\n${ src }`
           };
         }
       }
-      info = parsed[src] = (info || Analyzer.analyze(expression));
+      info = parsed[src] = info || Analyzer.analyze(expression);
     }
 
     if (enableLogging && !info.canObserve && !info.nativeCode) {
-      logger.debug(`Unable to observe '${propertyName}'.  ${info.reason}`);
+      writeLog(propertyName, info.reason);
     }
 
     if (info.canObserve) {
@@ -227,7 +221,7 @@ export class ComputedObservationAdapter {
     }
     return null;
   }
-}
+}, _class2.inject = [ObserverLocator, Parser], _temp);
 
 export function configure(frameworkConfig, config) {
   let container = frameworkConfig.container;
@@ -237,5 +231,6 @@ export function configure(frameworkConfig, config) {
 
   if (config) {
     enableLogging = config.enableLogging;
+    writeLog = config.writeLog || writeLog;
   }
 }

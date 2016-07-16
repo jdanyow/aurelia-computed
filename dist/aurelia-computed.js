@@ -173,6 +173,7 @@ export class GetterObserver {
 
 let logger = LogManager.getLogger('aurelia-computed');
 let enableLogging = true;
+let writeLog = (propertyName, reason) => logger.debug(`Unable to observe '${propertyName}'.  ${reason}`);
 let parsed = {};
 
 function getFunctionBody(src) {
@@ -205,7 +206,9 @@ export class ComputedObservationAdapter {
         };
       } else {
         try {
-          let body = getFunctionBody(src).trim().substr('return'.length).trim();
+          let body = getFunctionBody(src).trim();
+          body = body.replace(/^['"]use strict['"];/, '').trim();
+          body = body.substr('return'.length).trim();
           body = body.replace(/;$/, '');
           expression = this.parser.parse(body);
         } catch (ex) {
@@ -219,7 +222,7 @@ export class ComputedObservationAdapter {
     }
 
     if (enableLogging && !info.canObserve && !info.nativeCode) {
-      logger.debug(`Unable to observe '${propertyName}'.  ${info.reason}`);
+      writeLog(propertyName, info.reason);
     }
 
     if (info.canObserve) {
@@ -237,5 +240,6 @@ export function configure(frameworkConfig, config) {
 
   if (config) {
     enableLogging = config.enableLogging;
+    writeLog = config.writeLog || writeLog;
   }
 }

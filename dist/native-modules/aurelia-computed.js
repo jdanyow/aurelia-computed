@@ -1,25 +1,11 @@
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.ComputedObservationAdapter = exports.GetterObserver = exports.Analyzer = undefined;
-
 var _dec, _dec2, _class, _class2, _temp;
 
-exports.configure = configure;
-
-var _aureliaLogging = require('aurelia-logging');
-
-var LogManager = _interopRequireWildcard(_aureliaLogging);
-
-var _aureliaBinding = require('aurelia-binding');
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 
+import * as LogManager from 'aurelia-logging';
+import { subscriberCollection, connectable, createOverrideContext, ObserverLocator, Parser } from 'aurelia-binding';
 
-var Analyzer = exports.Analyzer = function () {
+export var Analyzer = function () {
   function Analyzer() {
     
 
@@ -134,13 +120,13 @@ var valueConverterLookupFunction = function valueConverterLookupFunction() {
   return null;
 };
 
-var GetterObserver = exports.GetterObserver = (_dec = (0, _aureliaBinding.connectable)(), _dec2 = (0, _aureliaBinding.subscriberCollection)(), _dec(_class = _dec2(_class = function () {
+export var GetterObserver = (_dec = connectable(), _dec2 = subscriberCollection(), _dec(_class = _dec2(_class = function () {
   function GetterObserver(obj, propertyName, descriptor, expression, observerLocator) {
     
 
     this.obj = obj;
     var bindingContext = { this: obj };
-    var overrideContext = (0, _aureliaBinding.createOverrideContext)(bindingContext);
+    var overrideContext = createOverrideContext(bindingContext);
     this.scope = { bindingContext: bindingContext, overrideContext: overrideContext };
     this.propertyName = propertyName;
     this.descriptor = descriptor;
@@ -189,7 +175,6 @@ var GetterObserver = exports.GetterObserver = (_dec = (0, _aureliaBinding.connec
   return GetterObserver;
 }()) || _class) || _class);
 
-
 var logger = LogManager.getLogger('aurelia-computed');
 var enableLogging = true;
 var writeLog = function writeLog(propertyName, reason) {
@@ -205,7 +190,7 @@ function getFunctionBody(src) {
   return s.substring(s.indexOf('{') + 1, s.lastIndexOf('}'));
 }
 
-var ComputedObservationAdapter = exports.ComputedObservationAdapter = (_temp = _class2 = function () {
+export var ComputedObservationAdapter = (_temp = _class2 = function () {
   function ComputedObservationAdapter(observerLocator, parser) {
     
 
@@ -253,10 +238,11 @@ var ComputedObservationAdapter = exports.ComputedObservationAdapter = (_temp = _
   };
 
   return ComputedObservationAdapter;
-}(), _class2.inject = [_aureliaBinding.ObserverLocator, _aureliaBinding.Parser], _temp);
-function configure(frameworkConfig, config) {
+}(), _class2.inject = [ObserverLocator, Parser], _temp);
+
+export function configure(frameworkConfig, config) {
   var container = frameworkConfig.container;
-  var observerLocator = container.get(_aureliaBinding.ObserverLocator);
+  var observerLocator = container.get(ObserverLocator);
   var adapter = container.get(ComputedObservationAdapter);
   observerLocator.addAdapter(adapter);
 
