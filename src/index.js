@@ -37,7 +37,9 @@ export class ComputedObservationAdapter {
         };
       } else {
         try {
-          let body = getFunctionBody(src).trim().substr('return'.length).trim();
+          let body = getFunctionBody(src).trim();
+          body = body.replace(/^['"]use strict['"];/, '').trim();
+          body = body.substr('return'.length).trim();
           body = body.replace(/;$/, '');
           expression = this.parser.parse(body);
         } catch (ex) {

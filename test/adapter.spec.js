@@ -31,6 +31,15 @@ class Foo {
   get xup() {
     return this._bar + ' some literal';
   }
+
+  get strict1() {
+    "use strict";
+    return this._bar + ' some literal';
+  }
+  get strict2() {
+    'use strict';
+    return this._bar + ' some literal';
+  }
 }
 
 describe('plugin', () => {
@@ -96,6 +105,8 @@ describe('adapter', () => {
     expect(adapter.getObserver(foo, 'bar', Object.getPropertyDescriptor(foo, 'bar'))).not.toBe(null);
     expect(adapter.getObserver(foo, 'baz', Object.getPropertyDescriptor(foo, 'baz'))).toBe(null);
     expect(adapter.getObserver(foo, 'xup', Object.getPropertyDescriptor(foo, 'xup'))).not.toBe(null);
+    expect(adapter.getObserver(foo, 'strict1', Object.getPropertyDescriptor(foo, 'strict1'))).not.toBe(null);
+    expect(adapter.getObserver(foo, 'strict2', Object.getPropertyDescriptor(foo, 'strict2'))).not.toBe(null);
   });
 
   it('returns observer matching property-observer interface', () => {
