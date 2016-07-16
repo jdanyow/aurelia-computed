@@ -5,6 +5,7 @@ import {GetterObserver} from './getter-observer';
 
 let logger = LogManager.getLogger('aurelia-computed');
 let enableLogging = true;
+let writeLog = (propertyName, reason) => logger.debug(`Unable to observe '${propertyName}'.  ${reason}`);
 let parsed = {};
 
 function getFunctionBody(src) {
@@ -53,7 +54,7 @@ export class ComputedObservationAdapter {
     }
 
     if (enableLogging && !info.canObserve && !info.nativeCode) {
-      logger.debug(`Unable to observe '${propertyName}'.  ${info.reason}`);
+      writeLog(propertyName, info.reason);
     }
 
     if (info.canObserve) {
@@ -71,5 +72,6 @@ export function configure(frameworkConfig, config) {
 
   if (config) {
     enableLogging = config.enableLogging;
+    writeLog = config.writeLog || writeLog;
   }
 }
